@@ -79,7 +79,10 @@ class ImagePlot(object):
             title='',
             interpolation='nearest',
             save_basename='Figure',
-            fps=10):
+            fps=10,
+            alpha=1,
+            fig=None,
+            ax=None):
         if im.ndim < 2:
             raise TypeError(
                 'Image dimension must at least be two, got {im_ndim}'.format(
@@ -87,8 +90,14 @@ class ImagePlot(object):
         import matplotlib.pyplot as plt
         self.axim = None
         self.im = im
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111)
+        if fig == None:
+            self.fig = plt.figure()
+        else:
+            self.fig = fig
+        if ax == None:
+            self.ax = self.fig.add_subplot(111)
+        else:
+            self.ax = ax #self.fig.add_subplot(111)
         self.shape = self.im.shape
         self.ndim = self.im.ndim
         self.slices = [s // 2 for s in self.shape]
@@ -112,6 +121,7 @@ class ImagePlot(object):
         self.save_basename = save_basename
         self.fps = fps
         self.help_text = None
+        self.alpha = alpha
 
         self.fig.canvas.mpl_disconnect(
             self.fig.canvas.manager.key_press_handler_id)
@@ -445,6 +455,7 @@ class ImagePlot(object):
                 origin='lower',
                 interpolation=self.interpolation,
                 aspect=1.0,
+                alpha=self.alpha,
                 extent=[
                     0,
                     imv.shape[1],
