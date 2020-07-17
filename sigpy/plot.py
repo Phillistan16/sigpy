@@ -80,9 +80,8 @@ class ImagePlot(object):
             interpolation='nearest',
             save_basename='Figure',
             fps=10,
-            alpha=1,
-            fig=None,
-            ax=None):
+            overlay=None,
+            alpha=None):
         if im.ndim < 2:
             raise TypeError(
                 'Image dimension must at least be two, got {im_ndim}'.format(
@@ -90,14 +89,8 @@ class ImagePlot(object):
         import matplotlib.pyplot as plt
         self.axim = None
         self.im = im
-        if fig == None:
-            self.fig = plt.figure()
-        else:
-            self.fig = fig
-        if ax == None:
-            self.ax = self.fig.add_subplot(111)
-        else:
-            self.ax = ax #self.fig.add_subplot(111)
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot()        
         self.shape = self.im.shape
         self.ndim = self.im.ndim
         self.slices = [s // 2 for s in self.shape]
@@ -120,7 +113,11 @@ class ImagePlot(object):
         self.vmax_mag = vmax_mag
         self.save_basename = save_basename
         self.fps = fps
-        self.help_text = None
+        self.help_text = None      
+        # for overlay colormap
+        self.axim2 = None
+        self.overlay = overlay
+        self.ax2 = self.fig.add_axes(self.ax.get_position(), frameon=False) if self.overlay is not None else None
         self.alpha = alpha
 
         self.fig.canvas.mpl_disconnect(
@@ -441,7 +438,7 @@ class ImagePlot(object):
 
         if self.vmax is None:
             self.vmax = imv.max()
-
+        
         if self.axim is None:
             if self.colormap is None:
                 colormap = 'gray'
@@ -455,7 +452,6 @@ class ImagePlot(object):
                 origin='lower',
                 interpolation=self.interpolation,
                 aspect=1.0,
-                alpha=self.alpha,
                 extent=[
                     0,
                     imv.shape[1],
@@ -464,12 +460,12 @@ class ImagePlot(object):
 
             if self.colormap is not None:
                 self.fig.colorbar(self.axim)
-
         else:
+            axes = self.fig.get_axes()
             self.axim.set_data(imv)
             self.axim.set_extent([0, imv.shape[1], 0, imv.shape[0]])
             self.axim.set_clim(self.vmin, self.vmax)
-
+                        
         if self.help_text is None:
             bbox_props = dict(boxstyle="round",
                               pad=1, fc="white", alpha=0.95, lw=0)
@@ -481,6 +477,35 @@ class ImagePlot(object):
                                           ma='left', size=8, bbox=bbox_props)
 
         self.help_text.set_visible(self.show_help)
+        
+        # add overlay with viridis colormap
+        if self.overlay is not None:
+            overlayv = sp.to_device(self.overlay[idx])
+            overlayv = np.transpose(overlayv, np.argsort(np.argsort(imv_dims)))
+            overlayv = array_to_image(overlayv, color=self.c is not None)
+            if self.axim2 is None:
+                self.axim2 = self.ax2.imshow(
+                    overlayv,
+                    #vmin=self.vmin,
+                    #vmax=self.vmax,
+                    cmap='viridis',
+                    origin='lower',
+                    interpolation=self.interpolation,
+                    aspect=1.0,
+                    alpha=self.alpha,
+                    extent=[
+                        0,
+                        imv.shape[1],
+                        0,
+                        imv.shape[0]])
+                # add colorbar for overlay
+                ax2_pos = self.ax2.get_position()
+                caxes = self.fig.add_axes([ax2_pos.x0*1.05 + ax2_pos.width * 1.05, ax2_pos.y0, 0.01, ax2_pos.height])
+                self.fig.colorbar(self.axim2, cax = caxes)
+            else:
+                self.axim2.set_data(overlayv)
+                self.axim2.set_extent([0, imv.shape[1], 0, imv.shape[0]])
+                #self.axim.set_clim(self.vmin, self.vmax)       
 
     def update_axes(self):
 
