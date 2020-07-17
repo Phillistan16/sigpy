@@ -90,7 +90,7 @@ class ImagePlot(object):
         self.axim = None
         self.im = im
         self.fig = plt.figure()
-        self.ax = self.fig.add_subplot()        
+        self.ax = self.fig.add_subplot(111)
         self.shape = self.im.shape
         self.ndim = self.im.ndim
         self.slices = [s // 2 for s in self.shape]
@@ -113,7 +113,7 @@ class ImagePlot(object):
         self.vmax_mag = vmax_mag
         self.save_basename = save_basename
         self.fps = fps
-        self.help_text = None      
+        self.help_text = None
         # for overlay colormap
         self.axim2 = None
         self.overlay = overlay
@@ -438,7 +438,7 @@ class ImagePlot(object):
 
         if self.vmax is None:
             self.vmax = imv.max()
-        
+
         if self.axim is None:
             if self.colormap is None:
                 colormap = 'gray'
@@ -460,12 +460,12 @@ class ImagePlot(object):
 
             if self.colormap is not None:
                 self.fig.colorbar(self.axim)
+
         else:
-            axes = self.fig.get_axes()
             self.axim.set_data(imv)
             self.axim.set_extent([0, imv.shape[1], 0, imv.shape[0]])
             self.axim.set_clim(self.vmin, self.vmax)
-                        
+                
         if self.help_text is None:
             bbox_props = dict(boxstyle="round",
                               pad=1, fc="white", alpha=0.95, lw=0)
