@@ -465,7 +465,7 @@ class ImagePlot(object):
             self.axim.set_data(imv)
             self.axim.set_extent([0, imv.shape[1], 0, imv.shape[0]])
             self.axim.set_clim(self.vmin, self.vmax)
-                
+
         if self.help_text is None:
             bbox_props = dict(boxstyle="round",
                               pad=1, fc="white", alpha=0.95, lw=0)
